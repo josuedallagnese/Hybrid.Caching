@@ -29,7 +29,7 @@ namespace Hybrid.Caching.Internal
             _metrics = new Metrics(logger);
         }
 
-        public CacheType Type { get; } = CacheType.Redis;
+        public CacheType Type => CacheType.Redis;
 
         public Task<bool> ExistsAsync(string cacheKey)
         {
@@ -76,8 +76,6 @@ namespace Hybrid.Caching.Internal
             return await _lockingProvider.LockAsync($"{cacheKey}:lock",
                 () => InternalGet<T>(database, cacheKey, dataRetriever, expiration));
         }
-
-
 
         public async Task<TimeSpan?> GetExpirationAsync(string cacheKey)
         {

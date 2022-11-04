@@ -1,9 +1,10 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Hybrid.Caching.State
 {
     public interface IHybridCacheStateNotifier
     {
-        Task NotifyChangesAsync(CacheState state);
+        Task NotifyChangesAsync(IEnumerable<string> keys);
     }
 }

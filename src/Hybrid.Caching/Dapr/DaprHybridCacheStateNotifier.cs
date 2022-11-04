@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Dapr.Client;
 using Hybrid.Caching.Configurations;
 using Hybrid.Caching.State;
@@ -14,7 +15,7 @@ namespace Hybrid.Caching.Dapr
             _options = options;
         }
 
-        public async Task NotifyChangesAsync(CacheState state)
+        public async Task NotifyChangesAsync(IEnumerable<string> state)
         {
             var clientBuilder = new DaprClientBuilder()
                 .UseJsonSerializationOptions(_options.JsonSerializerOptions);

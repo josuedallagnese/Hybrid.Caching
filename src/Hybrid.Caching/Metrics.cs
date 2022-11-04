@@ -1,28 +1,12 @@
 ﻿using System.Threading;
-using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 
 namespace Hybrid.Caching
 {
     public class Metrics
     {
-        public class Counter
-        {
-            private readonly long[] _counters = new long[2];
-
-            public void Increment(MetricType statsType)
-            {
-                Interlocked.Increment(ref _counters[(int)statsType]);
-            }
-
-            public long Get(MetricType statsType)
-            {
-                return Interlocked.Read(ref _counters[(int)statsType]);
-            }
-        }
-
-        private const string KEY = "cache_metrics";
-        private readonly ConcurrentDictionary<string, Counter> _counters = new ConcurrentDictionary<string, Counter>();
+        private readonly Counter _hits = new();
+        private readonly Counter _misses = new();
         private readonly ILogger _logger;
 
         public Metrics(ILogger logger)
@@ -32,56 +16,27 @@ namespace Hybrid.Caching
 
         public void OnHit(string cacheKey)
         {
-            GetCounter().Increment(MetricType.Hit);
+            _hits.Increment();
 
             _logger.LogInformation($"Cache hit = {cacheKey}");
         }
 
         public void OnMiss(string cacheKey)
         {
-            GetCounter().Increment(MetricType.Missed);
+            _misses.Increment();
 
             _logger.LogInformation($"Cache missed = {cacheKey}");
         }
 
-        public long GetMetric(MetricType statsType)
+        public MetricResult Get() => new(_hits.Get(), _misses.Get());
+
+        public sealed class Counter
         {
-            return GetCounter().Get(statsType);
-        }
-
-        private Counter GetCounter()
-        {
-            if (!_counters.TryGetValue(KEY, out var counter))
-            {
-                counter = new Counter();
-
-                if (_counters.TryAdd(KEY, counter))
-                {
-                    return counter;
-                }
-
-                return GetCounter();
-            }
-
-            return counter;
+            private long _counter = 0;
+            public void Increment() => Interlocked.Increment(ref _counter);
+            public long Get() => Interlocked.Read(ref _counter);
         }
     }
 
-    public class MetricResult
-    {
-        public CacheType Type { get; set; }
-        public long Misses { get; set; }
-        public long Hits { get; set; }
-
-        public MetricResult()
-        {
-        }
-
-        public MetricResult(CacheType type, Metrics metrics)
-        {
-            Type = type;
-            Misses = metrics.GetMetric(MetricType.Missed);
-            Hits = metrics.GetMetric(MetricType.Hit);
-        }
-    }
+    public record MetricResult(long Hits, long Misses);
 }

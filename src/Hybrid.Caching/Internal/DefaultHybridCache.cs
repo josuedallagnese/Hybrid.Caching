@@ -30,7 +30,7 @@ namespace Hybrid.Caching.Internal
             _logger = logger;
         }
 
-        public CacheType Type { get; } = CacheType.Hybrid;
+        public CacheType Type => CacheType.Hybrid;
 
         public async Task<bool> ExistsAsync(string cacheKey)
         {
@@ -80,7 +80,7 @@ namespace Hybrid.Caching.Internal
 
             await _memoryCache.RemoveAllAsync(cacheKeys).ConfigureAwait(false);
 
-            await _stateNotifier.NotifyChangesAsync(new CacheState(cacheKeys)).ConfigureAwait(false);
+            await _stateNotifier.NotifyChangesAsync(cacheKeys).ConfigureAwait(false);
         }
 
         public async Task RemoveAsync(string cacheKey)
@@ -96,7 +96,7 @@ namespace Hybrid.Caching.Internal
 
             await _memoryCache.RemoveAsync(cacheKey).ConfigureAwait(false);
 
-            await _stateNotifier.NotifyChangesAsync(new CacheState(cacheKey)).ConfigureAwait(false);
+            await _stateNotifier.NotifyChangesAsync(new[] { cacheKey }).ConfigureAwait(false);
         }
 
         public Task SetAsync<T>(string cacheKey, T cacheValue)
@@ -117,14 +117,14 @@ namespace Hybrid.Caching.Internal
                 _logger.LogError(ex, $"Redis error on Set operation - [\"{cacheKey}\"]");
             }
 
-            await _stateNotifier.NotifyChangesAsync(new CacheState(cacheKey)).ConfigureAwait(false);
+            await _stateNotifier.NotifyChangesAsync(new[] { cacheKey }).ConfigureAwait(false);
         }
 
-        public async Task InvalidateCacheAsync(CacheState eventMessage)
+        public async Task InvalidateCacheAsync(IEnumerable<string> keys)
         {
-            await _memoryCache.RemoveAllAsync(eventMessage.Keys).ConfigureAwait(false);
+            await _memoryCache.RemoveAllAsync(keys).ConfigureAwait(false);
 
-            _logger.LogInformation($"Cache state: removed values from local cache: \"{string.Join(",", eventMessage.Keys)}\"");
+            _logger.LogInformation($"Cache state: removed values from local cache: \"{string.Join(",", keys)}\"");
         }
 
         private async Task<T> InternalGetAsync<T>(string cacheKey, InternalGetParameter<T> parameter = null)
@@ -163,4 +163,6 @@ namespace Hybrid.Caching.Internal
             return cacheValue;
         }
     }
+
+    internal record InternalGetParameter<T>(Func<Task<T>> DataRetriever, TimeSpan Expiration);
 }

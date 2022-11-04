@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Dapr;
 using Microsoft.AspNetCore.Mvc;
 using Hybrid.Caching.State;
+using System.Collections.Generic;
 
 namespace Hybrid.Caching
 {
@@ -15,11 +16,11 @@ namespace Hybrid.Caching
 
             app.MapPost("/state", [Topic("hybrid-caching", "state")] async (
                 [FromServices] IHybridCacheState cacheState,
-                CacheState state) =>
+                IEnumerable<string> keys) =>
             {
-                await cacheState.InvalidateCacheAsync(state);
+                await cacheState.InvalidateCacheAsync(keys);
 
-                return Results.Ok(state);
+                return Results.Ok(keys);
             }).ExcludeFromDescription();
 
             return app;

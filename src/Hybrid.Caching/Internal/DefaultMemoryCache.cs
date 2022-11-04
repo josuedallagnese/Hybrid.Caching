@@ -20,7 +20,7 @@ namespace Hybrid.Caching.Internal
             _metrics = new Metrics(logger);
         }
 
-        public CacheType Type { get; } = CacheType.Memory;
+        public CacheType Type => CacheType.Memory;
 
         public Task<bool> ExistsAsync(string cacheKey)
         {

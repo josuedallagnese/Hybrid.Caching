@@ -23,8 +23,8 @@ namespace Hybrid.Caching.Internal
 
             var results = new List<MetricResult>()
             {
-                new MetricResult(CacheType.Memory, memoryCache.GetMetrics()),
-                new MetricResult(CacheType.Redis, redisCache.GetMetrics()),
+                memoryCache.GetMetrics().Get(),
+                redisCache.GetMetrics().Get(),
             };
 
             return results;
